@@ -5,6 +5,7 @@ struct MYSTREAM {
     char buf[BUFSIZ];
     int bufbytes;
     int index;
+    char mode;
 };
 
 struct MYSTREAM *myfopen(const char *pathname, const char *mode) { //returns a pointer to a struct MYSTREAM object
@@ -23,6 +24,7 @@ struct MYSTREAM *myfopen(const char *pathname, const char *mode) { //returns a p
         v->fd = open(pathname, O_RDONLY | O_CREAT, 0666);
         v->index = 0;
         v->bufbytes = 0;
+        v->mode = "r";
         if(v->fd == -1) {
             return NULL;
         }
@@ -34,6 +36,7 @@ struct MYSTREAM *myfopen(const char *pathname, const char *mode) { //returns a p
         v->fd = open(pathname, O_WRONLY | O_CREAT | O_TRUNC, 0666);
         v->index = 0;
         v->bufbytes = 0;
+        v->mode = "w";
         if(v->fd == -1) {
             return NULL;
         }
@@ -58,6 +61,7 @@ struct MYSTREAM *myfdopen(int filedesc, const char *mode) {
     v->fd = filedesc;
     v->index = 0;
     v->bufbytes = 0;
+    v->mode = mode; 
 
     if(v->fd == -1) {
         return NULL;
@@ -94,13 +98,20 @@ int myfputc(int c, struct MYSTREAM *stream) {
         } 
     }
 
-    stream->buf[stream->index++] = (char)c; //IS THIS RIGHT?
+    stream->buf[stream->index++] = (char)c; //IS THIS RIGHT? DO WE INPUT A CHA
     return c;
 }
 
 int myfclose(struct MYSTREAM *stream) {
 
     //CHECK HERE IF STREAM IS OPEN FOR WRITING OR NOT BEFORE DOING close()
+
+    if(stream->mode == "w") {
+        int a = write(stream->fd, stream->buf, stream->bufbytes);
+        if(a == -1) {
+            return -1;
+        }
+    }
 
     int closestatus = close(stream->fd);
 

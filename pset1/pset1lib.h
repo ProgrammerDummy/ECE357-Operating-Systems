@@ -1,9 +1,19 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <unistd.h>
+#include <string.h>
 
 #define EOF -1
 #define BUFSIZ 4096
+
+struct MYSTREAM {
+    int fd;
+    char buf[BUFSIZ];
+    int bufbytes;
+    int index;
+    char mode;
+};
 
 struct MYSTREAM *myfopen(const char *pathname, const char *mode);
 

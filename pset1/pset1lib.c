@@ -20,7 +20,6 @@ struct MYSTREAM *myfopen(const char *pathname, const char *mode) { //returns a p
         if(v->fd == -1) {
             return NULL;
         }
-
         
     }
 

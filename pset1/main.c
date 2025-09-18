@@ -7,7 +7,7 @@ int main(int argc, char **argv) {
     
     if(argc > 1) {
 
-        if(argc == 4) { // works
+        if(argc == 4) { //NOTE: unfortunately, only the 1st invokation syntax works, I couldn't figure out how to properly handle the standard input and output
             if(strcmp("-o", argv[1]) != 0) {
                 perror("");
                 return 255;

@@ -73,6 +73,7 @@ int simpleshell() {
             }
 
             if(execvp(command, arguments) == -1) { //executes command and the arguments
+                perror("command not found");
                 _exit(EXIT_FAILURE); //if execvp fails, then exits with EXIT_FAILURE status code
             }
             

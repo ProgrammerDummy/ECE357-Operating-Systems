@@ -1,5 +1,7 @@
 #include "simpleshell.h"
 
+void io_redirection(char **io_redirect_info, int io_redirect_info_index);
+
 int simpleshell() {
 
     int linebufsize = 0;
@@ -26,7 +28,7 @@ int simpleshell() {
     if(strcpy(command, token) == NULL) { //first token should always be command
         return -1;
     }
-
+    
     token = strtok(NULL, " \t\r\n\a");
 
     //format: command {argument {argument...}} {redirection operation {redirection operation}} 
@@ -37,9 +39,8 @@ int simpleshell() {
 
     while(token != NULL) {
 
-        //printf("%s\n", token);
         if((token[0]) == '>' || token[0] == '<' || token[0] == '2') { //look for IO redirection
-      d      //need to store IO redirection shit here to separate --> TODO
+            //need to store IO redirection shit here to separate --> TODO
             io_redirect_info[io_redirect_info_index++] = token;
         }
 
@@ -50,49 +51,94 @@ int simpleshell() {
         token = strtok(NULL, " \t\r\n\a");
     }
 
-    for(int i = 0; i < io_redirect_info_index; i++) {
-        printf("%s ", io_redirect_info[i]);
-    }
-
-    for(int i = 0; i < arguements_index; i++) {
-        printf("%s ", arguments[i]);
-    }
-
-
-    /*
+    
     int pid;
     switch(pid = fork()) { //forking (4)
         case -1:
+            perror("fork error");
             return -1;
 
         case 0: //child process runs (5C, 6C) --> need to retokenize to separate the filename to the io redirection command 
 
-        for(int i = 0; i < io_redirect_info; i++) { 
-            if(io_redirect_info[i][0] == '>') {
-                char *filename = r
+            if(io_redirection(io_redirect_info, io_redirect_info_index) != 0) {
+                
             }
+            execvp();
 
-            else if(io_redirect_info[i][0] == '<') { 
-                char *filename;
-            }
-
-            else {
-                char *filename;
-            }
-        }
-        //exec the command here w the arguments
             
-
+            break;
 
         default: //parent (5P, 6P)
         
     }
-    */
-    
 
     
 
     return 0;
 }
 
+int io_redirection(char **io_redirect_info, int io_redirect_info_index) {
+    for(int i = 0; i < io_redirect_info_index; i++) { 
+        if(io_redirect_info[i][0] == '<') { //simplest case <filename
+            char *filename = strtok(io_redirect_info[i], "<"); //filename is extracted
 
+            int fd = open(filename, O_RDONLY); 
+            if(fd == NULL) {
+                perror("error opening file for input");
+                return -1;
+            }
+
+            dup2(fd, 0);
+            close(fd);
+        }
+
+        else if(io_redirect_info[i][0] == '>') { 
+            char *filename;
+            int fd;
+            if(io_redirect_info[i][1] == '>') { //case: >>filename
+                filename = strtok(io_redirect_info[i], ">>");
+                fd = open(filename, O_CREAT | O_APPEND); 
+            }
+
+            else { //case: >filename
+                filename = strtok(io_redirect_info[i], ">");
+                fd = open(filename, O_CREAT | O_TRUNC);
+            }
+
+            if(fd == NULL) {
+                perror("error opening file for output");
+                return -1;
+            }
+
+            dup2(fd, 1);
+            close(fd);
+
+           
+        }
+
+        else { //this is for the case of redirecting stderr 2> or 2>> 
+            char *filename;
+            int fd;
+            if(io_redirect_info[i][1] == '>' && io_redirect_info[i][2] == '>') { //case: 2>>filename
+                filename = strtok(io_redirect_info[i], ">>");
+                fd = open(filename, O_CREAT | O_APPEND);
+            }
+
+            else { //case: 2>filename
+                filename = strtok(io_redirect_info[i], ">");
+                fd = open(filename, O_CREAT | O_TRUNC);
+            }
+
+            if(fd == NULL) {
+                perror("error opening file for output");
+                return -1;
+            }
+
+            dup2(fd, 2);
+            close(fd);
+            
+        }
+    }
+
+    return 0;
+}

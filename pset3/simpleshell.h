@@ -15,7 +15,7 @@
 #include <signal.h>
 
 int simpleshell();
-void io_redirection(char **io_redirect_info, int io_redirect_info_index);
+int io_redirection(char **io_redirect_info, int io_redirect_info_index);
 
 char linebuf[1024];
 

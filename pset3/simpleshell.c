@@ -1,6 +1,7 @@
 #include "simpleshell.h"
 
-void io_redirection(char **io_redirect_info, int io_redirect_info_index);
+int io_redirection(char **io_redirect_info, int io_redirect_info_index);
+int simpleshell();
 
 int simpleshell() {
 
@@ -21,11 +22,11 @@ int simpleshell() {
     int io_redirect_info_index = 0;
 
     char **arguments;
-    int arguements_index = 0;
+    int arguments_index = 1;
 
     token = strtok(linebuf, " \t\r\n\a"); //breaks up into tokens (3)
-
-    if(strcpy(command, token) == NULL) { //first token should always be command
+    
+    if(strcpy(command, token) == NULL || strcpy(arguments[0], token) == NULL) { //first token should always be command
         return -1;
     }
     
@@ -45,7 +46,7 @@ int simpleshell() {
         }
 
         else { //everything else lets put it into arguments 
-            arguments[arguements_index++] = token; 
+            arguments[arguments_index++] = token; 
         }
 
         token = strtok(NULL, " \t\r\n\a");
@@ -53,6 +54,12 @@ int simpleshell() {
 
     
     int pid;
+    int real_time_elapsed_begin = 0;
+    int user_CPU_time = 0;
+    int system_CPU_time = 0;
+    int status;
+
+
     switch(pid = fork()) { //forking (4)
         case -1:
             perror("fork error");
@@ -61,29 +68,35 @@ int simpleshell() {
         case 0: //child process runs (5C, 6C) --> need to retokenize to separate the filename to the io redirection command 
 
             if(io_redirection(io_redirect_info, io_redirect_info_index) != 0) {
-                
+                _exit(EXIT_FAILURE);
             }
-            execvp();
 
+            if(execvp(command, arguments) == -1) { //executes command and the arguments
+                _exit(EXIT_FAILURE); //if execvp fails, then exits with EXIT_FAILURE status code
+            }
             
-            break;
+            _exit(EXIT_SUCCESS); //execvp works, so exits with EXIT_SUCCESS
 
         default: //parent (5P, 6P)
-        
+            waitpid(pid, &status, 0); //wait for child process to exit
+
+            
+
+            return 0;
     }
-
-    
-
-    return 0;
 }
 
 int io_redirection(char **io_redirect_info, int io_redirect_info_index) {
+
     for(int i = 0; i < io_redirect_info_index; i++) { 
+
+        int fd;
+
         if(io_redirect_info[i][0] == '<') { //simplest case <filename
             char *filename = strtok(io_redirect_info[i], "<"); //filename is extracted
 
-            int fd = open(filename, O_RDONLY); 
-            if(fd == NULL) {
+            fd = open(filename, O_RDONLY); 
+            if(fd == -1) {
                 perror("error opening file for input");
                 return -1;
             }
@@ -94,7 +107,7 @@ int io_redirection(char **io_redirect_info, int io_redirect_info_index) {
 
         else if(io_redirect_info[i][0] == '>') { 
             char *filename;
-            int fd;
+
             if(io_redirect_info[i][1] == '>') { //case: >>filename
                 filename = strtok(io_redirect_info[i], ">>");
                 fd = open(filename, O_CREAT | O_APPEND); 
@@ -105,20 +118,19 @@ int io_redirection(char **io_redirect_info, int io_redirect_info_index) {
                 fd = open(filename, O_CREAT | O_TRUNC);
             }
 
-            if(fd == NULL) {
+            if(fd == -1) {
                 perror("error opening file for output");
                 return -1;
             }
 
+
             dup2(fd, 1);
             close(fd);
-
-           
         }
 
         else { //this is for the case of redirecting stderr 2> or 2>> 
             char *filename;
-            int fd;
+     
             if(io_redirect_info[i][1] == '>' && io_redirect_info[i][2] == '>') { //case: 2>>filename
                 filename = strtok(io_redirect_info[i], ">>");
                 fd = open(filename, O_CREAT | O_APPEND);
@@ -129,7 +141,7 @@ int io_redirection(char **io_redirect_info, int io_redirect_info_index) {
                 fd = open(filename, O_CREAT | O_TRUNC);
             }
 
-            if(fd == NULL) {
+            if(fd == -1) {
                 perror("error opening file for output");
                 return -1;
             }

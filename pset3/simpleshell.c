@@ -7,6 +7,7 @@ int simpleshell() {
 
     int linebufsize = 0;
 
+    printf("simpleshell: ");
     if(fgets(linebuf, 1024, stdin) == NULL) { 
         perror("");
     } //maybe for here i can use something else...?

@@ -41,7 +41,7 @@ int main(int argc, char* argv[]) {
 
         while(getline(&dict_word, &dict_word_len, dictionary) != -1) {
             if(strcmp(dict_word, word) == 0) {
-                fprintf(stdout, "%s\n", word);
+                fprintf(stdout, "%s", word);
             }
         }
 

@@ -1,0 +1,3 @@
+this is a standard textfile for the purpose of 
+testing out the bgrep function i have made with 
+marco chen

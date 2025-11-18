@@ -1,3 +1,7 @@
-this is a standard textfile for the purpose of 
-testing out the bgrep function i have made with 
-marco chen
+apple
+bananas
+all fruits are yummy regardless of disposition or deposition -marthecow
+
+word --> bit 
+
+pattern: deposit 

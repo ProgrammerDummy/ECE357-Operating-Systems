@@ -5,19 +5,58 @@ int main(int argc, char* argv[]) {
 
     char *pattern = malloc(1024*sizeof(char));
 
-    strcpy(pattern, argv[1]);
+    if(pattern == NULL) {
+        fprintf(stdout, "malloc failed\n");
+        return -1;
+    }
+
+    if(strcpy(pattern, argv[1]) == NULL) {
+        fprintf(stdout, "strcpy failed\n");
+        return -1;
+    }
+
+    int pattern_length = strlen(pattern);
 
     int fd = open(argv[2], O_CREAT | O_RDONLY);
 
-    int length = lseek(fd, 0, SEEK_END);
+    if(fd == -1) {
+        fprintf(stdout, "open failed\n");
+        return -1;
+    }
 
-    char *mapped_file = mmap(NULL, length, PROT_READ, MAP_PRIVATE, fd, 0);
+    int file_length = lseek(fd, 0, SEEK_END);
 
-    fprintf(stdout, "%s", mapped_file);
+    char *mapped_file = mmap(NULL, file_length, PROT_READ, MAP_PRIVATE, fd, 0);
 
-    fprintf(stdout, "\n");
+    if(mapped_file == MAP_FAILED) {
+        fprintf(stdout, "map failed\n");
+        return -1;
+    }
+
+    
+    for(int i = 0; i < file_length; i++) {
+        if(pattern[0] == mapped_file[i]) {
+
+            int matched_bit_count = 0;
+
+            for(int j = 0; j < file_length; j++) {
+                if(pattern[j] == mapped_file[i+j]) {
+                    matched_bit_count += 1; 
+                }
+            }
+
+            if(matched_bit_count == file_length) { //bit signature completely matches
+                fprintf(stdout, "match complete\n");
+                return 0;
+                
+            }
+        }
+    }
+
 
     free(pattern);
 
+    fprintf(stdout, "no errors or matches found\n");
 
+    return 1;
 }

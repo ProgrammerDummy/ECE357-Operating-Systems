@@ -36,6 +36,11 @@ int main(int argc, char* argv[]) {
     
     for(int i = 0; i < file_length; i++) {
         if(pattern[0] == mapped_file[i]) {
+            static int count = 0;
+            
+            count++;
+
+            fprintf(stdout, "%d ", count);
 
             int matched_bit_count = 0;
 
@@ -45,7 +50,7 @@ int main(int argc, char* argv[]) {
                 }
             }
 
-            if(matched_bit_count == file_length) { //bit signature completely matches
+            if(matched_bit_count == pattern_length) { //bit signature completely matches
                 fprintf(stdout, "match complete\n");
                 return 0;
                 

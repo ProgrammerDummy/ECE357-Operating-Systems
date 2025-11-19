@@ -50,6 +50,8 @@ int main(int argc, char* argv[]) {
 
 int bgrep(bool pattern_flag, bool context_flag, char *pattern, char **file_arr, int file_count) {
 
+    bool match_flag = false;
+
     int pattern_length = 0;
     
     if(pattern_flag == true) {
@@ -107,21 +109,21 @@ int bgrep(bool pattern_flag, bool context_flag, char *pattern, char **file_arr, 
         //from this point on now i have everything ready
 
         
-        for(int i = 0; i < mapped_file_length; i++) {
+        for(int j = 0; j < mapped_file_length; j++) {
 
             int bit_count = 0;
 
-            if(pattern[0] == mapped_file[i]) {
-                for(int j = 0; j < pattern_length; j++) {
-                    if(pattern[j] == mapped_file[i+j]) {
+            if(pattern[0] == mapped_file[j]) {
+                for(int k = 0; k < pattern_length; k++) {
+                    if(pattern[k] == mapped_file[k+j]) {
                         bit_count++;
                     }
                 }
             }
 
             if(bit_count == pattern_length) {
-                fprintf(stdout, "match complete\n");
-                return 0;
+                fprintf(stdout, "%s:%d\n", file_arr[i], j);
+                match_flag = true;
             }
         }
 
@@ -137,6 +139,10 @@ int bgrep(bool pattern_flag, bool context_flag, char *pattern, char **file_arr, 
             perror("munmap failed for pattern file");
             return -1;
         }
+    }
+
+    if(match_flag == true) {
+        return 0;
     }
 
     fprintf(stdout, "no errors or matches found\n");

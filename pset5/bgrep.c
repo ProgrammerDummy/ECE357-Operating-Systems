@@ -103,42 +103,40 @@ int bgrep(bool pattern_flag, bool context_flag, char *pattern, char **file_arr, 
             perror("failed to map file");
             return -1;
         }
-
+        
         //from this point on now i have everything ready
 
-
+        
         for(int i = 0; i < mapped_file_length; i++) {
 
-            int count = 0;
-            bool match_failed_flag = 0;
+            int bit_count = 0;
 
             if(pattern[0] == mapped_file[i]) {
                 for(int j = 0; j < pattern_length; j++) {
-                    if(pattern[j] != mapped_file[i+j]) {
-                        match_failed_flag = true;
+                    if(pattern[j] == mapped_file[i+j]) {
+                        bit_count++;
                     }
                 }
             }
 
-            if(match_failed_flag == false) {
+            if(bit_count == pattern_length) {
                 fprintf(stdout, "match complete\n");
                 return 0;
             }
         }
-
 
         if(munmap(mapped_file, mapped_file_length) == -1) {
             perror("munmap failed");
             return -1;
         }
 
-        if(pattern_flag == true) {
-            if(munmap(pattern, pattern_length) == -1) {
-                perror("munmap failed for pattern file");
-                return -1;
-            }
-        }
+    }
 
+    if(pattern_flag == true) { //this part not really necessary because the process will just unmap automatically upon exiting
+        if(munmap(pattern, pattern_length) == -1) {
+            perror("munmap failed for pattern file");
+            return -1;
+        }
     }
 
     fprintf(stdout, "no errors or matches found\n");

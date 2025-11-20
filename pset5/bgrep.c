@@ -1,6 +1,6 @@
 #include "bgrep.h"
 
-int bgrep(bool pattern_flag, bool context_flag, char *pattern, char **file_arr, int file_count);
+int bgrep(bool pattern_flag, bool context_flag, char *pattern, char **file_arr, int file_count, int context_bytes);
 
 int main(int argc, char* argv[]) {
     //this is the case where there is no flags, only the default
@@ -8,21 +8,26 @@ int main(int argc, char* argv[]) {
     bool pattern_flag = false;
     bool context_flag = false;
     char *pattern = NULL;
+    int context_bytes = 0;
 
     char **file_arr = malloc(BUFSIZ * sizeof(char*)); // can store up to BUFSIZ filenames
 
     int opt;
-    while ((opt = getopt(argc, argv, "cp:")) != -1) {
+    while ((opt = getopt(argc, argv, "c:p:")) != -1) {
         switch (opt) {
             case 'c':
                 context_flag = true;
+                if((context_bytes = atoi(optarg)) == 0) {
+                    fprintf(stderr, "Could not convert optarg %s to integer. %s\n", optarg, strerror(errno));                    
+                    return -1;
+                }
                 break;
             case 'p':
                 pattern_flag = true;
                 pattern = optarg;
                 break;
             case '?':
-                return 1;
+                return -1;
         }
     }
 
@@ -35,7 +40,7 @@ int main(int argc, char* argv[]) {
         file_arr[file_count++] = argv[optind++]; 
     }
 
-    int bgrep_return_value = bgrep(pattern_flag, context_flag, pattern, file_arr, file_count);
+    int bgrep_return_value = bgrep(pattern_flag, context_flag, pattern, file_arr, file_count, context_bytes);
 
     free(file_arr);
 
@@ -48,7 +53,7 @@ int main(int argc, char* argv[]) {
 }
 
 
-int bgrep(bool pattern_flag, bool context_flag, char *pattern, char **file_arr, int file_count) {
+int bgrep(bool pattern_flag, bool context_flag, char *pattern, char **file_arr, int file_count, int context_bytes) {
 
     bool match_flag = false;
 
@@ -122,9 +127,32 @@ int bgrep(bool pattern_flag, bool context_flag, char *pattern, char **file_arr, 
             }
 
             if(bit_count == pattern_length) {
-                fprintf(stdout, "%s:%d\n", file_arr[i], j);
+            
+                fprintf(stdout, "%s:%d", file_arr[i], j);
+
+                if(context_flag == true) {
+                    for(int k = j-context_bytes; k < j+pattern_length+context_bytes-1; k++) {
+                        if(k < 0 || k >= mapped_file_length) {
+                            continue;
+                        }
+
+                        fprintf(stdout, " %c", mapped_file[k]);
+                    }
+
+                    for(int k = j-context_bytes; k < j+pattern_length+context_bytes-1; k++) {
+                        if(k < 0 || k >= mapped_file_length) {
+                            continue;
+                        }
+
+                        fprintf(stdout, " %X", mapped_file[k]);
+                    }
+                }
+                fprintf(stdout, "\n");
+
                 match_flag = true;
             }
+
+        
         }
 
         if(munmap(mapped_file, mapped_file_length) == -1) {

@@ -7,7 +7,7 @@ int main() {
     //use 
 
     long long int *counter = mmap(NULL, 4096, PROT_READ| PROT_WRITE, MAP_SHARED | MAP_ANON, -1, 0);
-    int *lock = mmap(NULL, 4096, PROT_READ| PROT_WRITE, MAP_SHARED | MAP_ANON, -1, 0);
+    volatile char *lock = mmap(NULL, 4096, PROT_READ| PROT_WRITE, MAP_SHARED | MAP_ANON, -1, 0);
 
     *counter = 0;
 
@@ -29,7 +29,6 @@ int main() {
         } 
     }
     spin_unlock(lock);
-    
 
     if(child_pid == 0) {
         exit(EXIT_SUCCESS);

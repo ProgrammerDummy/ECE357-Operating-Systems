@@ -24,5 +24,5 @@
 #include <sched.h>
 #include <stdatomic.h>
 
-int spin_lock(int *lock);
+void spin_lock(volatile char *lock);
 void spin_unlock(int *lock);

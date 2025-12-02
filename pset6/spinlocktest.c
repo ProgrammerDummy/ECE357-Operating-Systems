@@ -25,7 +25,6 @@ int main() {
     for(int i = 0; i < 1000; i++) {
         for(int j = 0; j < 1000; j++) {
             *counter += 1;
-
         } 
     }
     spin_unlock(lock);

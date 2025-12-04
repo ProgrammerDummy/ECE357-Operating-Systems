@@ -4,15 +4,11 @@ struct sem {
     volatile unsigned int semaphore; //protects the data_example
     volatile char semaphore_lock; //protects the semaphore integer 
     pid_t wait_list[n_proc]; //keeps track of processes waiting 
-    int wait_list_index;
+    int sleep_list[n_proc]; //flag array (0 = awake, 1 = asleep)
 };
 
 void handler() {
-    /*
-    
-            DO THE SIGLONGJMP HERE
-
-    */
+    //does nothing, just prevents process from terminating
 }
 
 void sem_init(struct sem *s, int count) {
@@ -25,11 +21,12 @@ void sem_init(struct sem *s, int count) {
         return -1;
     }
 
-    for(int i = 0; i < my_procnum; i++) {
+    for(int i = 0; i < n_proc; i++) {
         s->wait_list[i] = 0;
+        s->sleep_list[i] = 0;
     }
 
-    s->wait_list_index = 0; 
+    s->wait_list[my_procnum] = getpid();
 
 
     struct sigaction SIGUSR1_response;
@@ -95,22 +92,16 @@ void sem_wait(struct sem *s) { // P operation
         perror("signal masking failed");
     }
 
-    /*
-    
-            DO SIGSETJMP TO HERE SO THAT WE CAN TELEPORT HERE
-
-    */
-
     spin_lock(&s->semaphore_lock);
 
-    if(s->semaphore == 0) {
-        s->wait_list[s->wait_list_index] = getpid(); //add the current process to list of processes in wait list
-        s->wait_list_index++; //increment the wait list index
+    while(s->semaphore == 0) {
+        s->sleep_list[my_procnum] = 1; //add the current process to list of processes in wait list
         spin_unlock(&s->semaphore_lock);
         
         sigprocmask(SIG_SETMASK, &oldset, NULL); //reset signal mask to original
         sigemptyset(&newset);
         sigsuspend(&newset); //any signal works, goes to sleep (blocks)
+        spin_lock(&s->semaphore_lock);
     }
     
     s->semaphore--;
@@ -142,15 +133,13 @@ void sem_inc(struct sem *s) { // V operation
 
     s->semaphore++;
 
-    for(int i = 0; i < s->wait_list_index; i++) {
+    for(int i = 0; i < n_proc; i++) {
         kill(s->wait_list[i], SIGUSR1); //wakes up every sleeping process
     } 
 
-    for(int i = 0; i < s->wait_list_index; i++) {
+    for(int i = 0; i < n_proc; i++) {
         s->wait_list[i] = 0; //empties the waitlist
     }
-
-    s->wait_list_index = 0;
 
     spin_unlock(&s->semaphore_lock);
 

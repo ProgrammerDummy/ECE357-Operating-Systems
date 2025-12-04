@@ -7,6 +7,13 @@ struct sem {
     int wait_list_index;
 };
 
+void handler() {
+    /*
+    
+            DO THE SIGLONGJMP HERE
+
+    */
+}
 
 void sem_init(struct sem *s, int count) {
     s->semaphore = count;
@@ -23,6 +30,19 @@ void sem_init(struct sem *s, int count) {
     }
 
     s->wait_list_index = 0; 
+
+
+    struct sigaction SIGUSR1_response;
+
+    SIGUSR1_response.sa_flags = 0;
+    SIGUSR1_response.sa_mask = 0;
+    SIGUSR1_response.sa_sigaction = handler;
+
+    if(sigaction(SIGUSR1, &SIGUSR1_response, NULL) == -1) {
+        perror("sigaction for assigning new handler for SIGUSR1 failed");
+        return;
+    }
+
     //index is the next element (process) TO BE added, meaning currently no waiting process id is stored in wait_list[wait_list_index]
 }
 
@@ -75,6 +95,12 @@ void sem_wait(struct sem *s) { // P operation
         perror("signal masking failed");
     }
 
+    /*
+    
+            DO SIGSETJMP TO HERE SO THAT WE CAN TELEPORT HERE
+
+    */
+
     spin_lock(&s->semaphore_lock);
 
     if(s->semaphore == 0) {
@@ -83,6 +109,7 @@ void sem_wait(struct sem *s) { // P operation
         spin_unlock(&s->semaphore_lock);
         
         sigprocmask(SIG_SETMASK, &oldset, NULL); //reset signal mask to original
+        sigemptyset(&newset);
         sigsuspend(&newset); //any signal works, goes to sleep (blocks)
     }
     

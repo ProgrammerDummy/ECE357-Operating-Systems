@@ -1,6 +1,7 @@
 #include "spinlock.h"
+#define n_proc 64
 
-#define my_procnum 64
+extern int my_procnum;
 
 void sem_init(struct sem *s, int count);
 int sem_try(struct sem *s);

@@ -3,7 +3,7 @@
 struct sem {
     volatile unsigned int semaphore; //protects the data_example
     volatile char semaphore_lock; //protects the semaphore integer 
-    pid_t wait_list[my_procnum]; //keeps track of processes waiting 
+    pid_t wait_list[n_proc]; //keeps track of processes waiting 
     int wait_list_index;
 };
 

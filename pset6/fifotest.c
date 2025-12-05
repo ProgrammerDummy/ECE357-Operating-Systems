@@ -36,9 +36,12 @@ int main(int argc, char* argv[]) {
     // (i will treat the parent as the one reader)
 
     // if the process is a child and a writer
+
+    fprintf(stdout, "Beginning test with %d writers, %d items each\n", num_writers, num_items_each);
     if ((pid == 0) && (my_procnum > 0)) {
         for (int i = 0; i < num_items_each; i++) {
             fifo_wr(fifo, i);
+            fprintf(stdout, "Writer %d completed\n", my_procnum);
         }
     }
 
@@ -52,7 +55,7 @@ int main(int argc, char* argv[]) {
 
     if (my_procnum == 0) {
         while (fifo->item_count > 0) {
-            printf("Parent read %d\n", fifo_rd(fifo));
+            fprintf(stdout, "Reader stream %d completed\n", fifo_rd(fifo));
         }
     }
 
